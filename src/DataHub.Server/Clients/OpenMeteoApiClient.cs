@@ -7,6 +7,7 @@ using DataHub.Server.Extensions;
 using DataHub.Server.Models;
 using DataHub.Server.Serialization;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DataHub.Server.Clients;
@@ -18,6 +19,7 @@ public class OpenMeteoApiClient : IApiClient<Weather>
 {
     private readonly HttpClient _httpClient;
     private readonly IDistributedCache _distributedCache;
+    private readonly ILogger<OpenMeteoApiClient> _logger;
     private readonly string _clientName;
 
     /// <summary>
@@ -26,12 +28,18 @@ public class OpenMeteoApiClient : IApiClient<Weather>
     /// <param name="httpClientFactory">The factory for creating <see cref="HttpClient"/> instances.</param>
     /// <param name="distributedCache">The distributed cache for caching API responses.</param>
     /// <param name="options">The options for configuring the Open-Meteo API client.</param>
+    /// <param name="logger">The logger for logging messages within the <see cref="OpenMeteoApiClient"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="httpClientFactory"/>, <paramref name="distributedCache"/>, or <paramref name="options"/> is null.</exception>
-    public OpenMeteoApiClient(IHttpClientFactory httpClientFactory, IDistributedCache distributedCache, IOptions<OpenMeteoOptions> options)
+    public OpenMeteoApiClient(
+        IHttpClientFactory httpClientFactory, 
+        IDistributedCache distributedCache, 
+        IOptions<OpenMeteoOptions> options, 
+        ILogger<OpenMeteoApiClient> logger)
     {
         _httpClient = httpClientFactory?.CreateClient(nameof(OpenMeteoApiClient)) ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
         _clientName = options?.Value?.ClientName ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -54,10 +62,9 @@ public class OpenMeteoApiClient : IApiClient<Weather>
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiClientData<Weather>(_clientName)
-            {
-                ErrorMessage = await response.ProcessErrorResponse()
-            };
+            var weatherData = new ApiClientData<Weather>(_clientName, isSuccessful: false);
+            _logger.LogWarning("{ErrorMessage}. {Exception}", weatherData.ErrorMessage, response.ProcessErrorResponse());
+            return weatherData;
         }
 
         var meteoResponse = JsonSerializer.Deserialize<OpenMeteoApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());

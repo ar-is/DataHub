@@ -78,12 +78,12 @@ public partial class OpenMeteoApiResponse
     /// <summary>
     /// Converts the <see cref="OpenMeteoApiResponse"/> to Weather data for the Open-Meteo API client.
     /// </summary>
-    /// <param name="apiClient">The name of the API client.</param>
+    /// <param name="apiProvider">The name of the API provider client.</param>
     /// <returns>An <see cref="ApiClientData{Weather}"/>instance containing weather data.</returns>
-    public ApiClientData<Weather> ToWeatherData(string apiClient)
+    public ApiClientData<Weather> ToWeatherData(string apiProvider)
     {
         var tempsPerDate = Daily?.Time.Zip(Daily?.Temperature2MMax, (date, temperature) => (date, temperature));
-        return new(apiClient)
+        return new(apiProvider, isSuccessful: true)
         {
             Data = tempsPerDate.Select(x => new Weather
             {

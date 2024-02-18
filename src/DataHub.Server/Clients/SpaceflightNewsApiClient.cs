@@ -7,6 +7,7 @@ using DataHub.Server.Extensions;
 using DataHub.Server.Models;
 using DataHub.Server.Serialization;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DataHub.Server.Clients;
@@ -18,6 +19,7 @@ public class SpaceflightNewsApiClient : IApiClient<News>
 {
     private readonly HttpClient _httpClient;
     private readonly IDistributedCache _distributedCache;
+    private readonly ILogger<SpaceflightNewsApiClient> _logger;
     private readonly string _clientName;
 
     /// <summary>
@@ -26,12 +28,18 @@ public class SpaceflightNewsApiClient : IApiClient<News>
     /// <param name="httpClientFactory">The factory for creating <see cref="HttpClient"/> instances.</param>
     /// <param name="distributedCache">The distributed cache for caching API responses.</param>
     /// <param name="options">The options for configuring the SpaceflightNews API client.</param>
+    /// <param name="logger">The logger for logging messages within the <see cref="SpaceflightNewsApiClient"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="httpClientFactory"/>, <paramref name="distributedCache"/>, or <paramref name="options"/> is null.</exception>
-    public SpaceflightNewsApiClient(IHttpClientFactory httpClientFactory, IDistributedCache distributedCache, IOptions<SpaceflightNewsOptions> options)
+    public SpaceflightNewsApiClient(
+        IHttpClientFactory httpClientFactory, 
+        IDistributedCache distributedCache, 
+        IOptions<SpaceflightNewsOptions> options, 
+        ILogger<SpaceflightNewsApiClient> logger)
     {
         _httpClient = httpClientFactory?.CreateClient(nameof(SpaceflightNewsApiClient)) ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
         _clientName = options?.Value?.ClientName ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -53,10 +61,9 @@ public class SpaceflightNewsApiClient : IApiClient<News>
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiClientData<News>(_clientName)
-            {
-                ErrorMessage = await response.ProcessErrorResponse()
-            };
+            var newsData = new ApiClientData<News>(_clientName, isSuccessful: false);
+            _logger.LogWarning("{ErrorMessage}. {Exception}", newsData.ErrorMessage, response.ProcessErrorResponse());
+            return newsData;
         }
 
         var meteoResponse = JsonSerializer.Deserialize<SpaceflightNewsApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());

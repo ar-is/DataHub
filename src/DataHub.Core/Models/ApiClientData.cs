@@ -16,10 +16,10 @@ public class ApiClientData<T> where T : class
     /// </summary>
     public IEnumerable<T> Data { get; set; } = [];
 
-    ///// <summary>
-    ///// Gets or sets a value indicating whether the data fetching operation was successful.
-    ///// </summary>
-    //public bool IsSuccessful { get; set; }
+    /// <summary>
+    /// Value indicating whether the data fetching operation was successful.
+    /// </summary>
+    public bool IsSuccessful { get; set; }
 
     /// <summary>
     /// The error message if the data fetching operation failed.
@@ -30,8 +30,10 @@ public class ApiClientData<T> where T : class
     /// Initializes a new instance of the <see cref="ApiClientData{T}"/> class with the specified API provider.
     /// </summary>
     /// <param name="apiProvider">The name of the API client provider.</param>
-    public ApiClientData(string apiProvider)
+    public ApiClientData(string apiProvider, bool isSuccessful)
     {
         ApiProvider = apiProvider;
+        IsSuccessful = isSuccessful;
+        ErrorMessage = isSuccessful ? null : $"Could not fetch data successfully from {ApiProvider}";
     }
 }

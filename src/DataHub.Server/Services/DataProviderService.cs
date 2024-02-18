@@ -1,6 +1,7 @@
 ﻿using DataHub.Core.Abstractions;
 using DataHub.Core.Filters;
 using DataHub.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DataHub.Server.Services;
 
@@ -11,6 +12,7 @@ namespace DataHub.Server.Services;
 public class DataProviderService<T> : IDataProviderService<T> where T : class
 {
     private readonly IEnumerable<IApiClient<T>> _apiClients;
+    private readonly ILogger<DataProviderService<T>> _logger;
 
     /// <summary>
     /// The category of the data provided by the service.
@@ -22,9 +24,10 @@ public class DataProviderService<T> : IDataProviderService<T> where T : class
     /// </summary>
     /// <param name="apiClients">The API clients used to fetch data.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="apiClients"/> is null.</exception>
-    public DataProviderService(IEnumerable<IApiClient<T>> apiClients)
+    public DataProviderService(IEnumerable<IApiClient<T>> apiClients, ILogger<DataProviderService<T>> logger)
     {
         _apiClients = apiClients ?? throw new ArgumentNullException(nameof(apiClients));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
@@ -35,10 +38,17 @@ public class DataProviderService<T> : IDataProviderService<T> where T : class
         {
             return data;
         }
-        
-        await foreach (var clientData in FetchApiClientData(dateRange))
+
+        try
         {
-            data.ApiProviders.Add(clientData);
+            await foreach (var clientData in FetchApiClientData(dateRange))
+            {
+                data.ApiProviders.Add(clientData);
+            }
+        } catch (Exception ex)
+        {
+            _logger.LogError("Something went wrong while trying to fetch {DataCategory} data - Error: {Exception}", DataCategory, ex.InnerException?.Message ?? ex.Message);
+            return data;
         }
 
         return data;

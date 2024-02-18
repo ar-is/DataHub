@@ -42,10 +42,10 @@ public partial class OpenLibraryApiResponse
     /// <summary>
     /// Converts the OpenLibraryApiResponse to Book data for the Open Library API client.
     /// </summary>
-    /// <param name="apiClient">The name of the API client.</param>
+    /// <param name="apiProvider">The name of the API provider client.</param>
     /// <returns>An <see cref="ApiClientData{Book}"/>instance containing book data.</returns>
-    public ApiClientData<Book> ToBooksData(string apiClient)
-        => new(apiClient)
+    public ApiClientData<Book> ToBooksData(string apiProvider)
+        => new(apiProvider, isSuccessful: true)
         {
             Data = Works.Select(x => new Book
             {

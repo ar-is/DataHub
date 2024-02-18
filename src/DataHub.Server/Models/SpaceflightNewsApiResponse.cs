@@ -36,10 +36,10 @@ public partial class SpaceflightNewsApiResponse
     /// <summary>
     /// Converts the <see cref="SpaceflightNewsApiResponse"/> to News data for the Spaceflight News API client.
     /// </summary>
-    /// <param name="apiClient">The name of the API client.</param>
+    /// <param name="apiProvider">The name of the API provider client.</param>
     /// <returns>An <see cref="ApiClientData{News}"/>instance containing news data.</returns>
-    public ApiClientData<News> ToNewsData(string apiClient)
-        => new(apiClient)
+    public ApiClientData<News> ToNewsData(string apiProvider)
+        => new(apiProvider, isSuccessful: true)
         {
             Data = Results.Select(x => new News
             {
