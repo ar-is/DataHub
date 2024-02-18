@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.OpenApi.Models;
 
 namespace DataHub.Server.Extensions;
 
@@ -11,6 +12,34 @@ namespace DataHub.Server.Extensions;
 /// </summary>
 internal static class OpenApiExtensions
 {
+    /// <summary>Adds specified security scheme to the Open API description.</summary>
+    /// <param name="builder">Builds conventions that will be used for customization of <see cref="EndpointBuilder"/> instances.</param>
+    /// <param name="securityScheme">The security scheme to use.</param>
+    /// <param name="requiredScopes">The array of required scopes.</param>
+    /// <returns>The <see cref="IEndpointConventionBuilder"/>.</returns>
+    public static IEndpointConventionBuilder AddOpenApiSecurityRequirement(this IEndpointConventionBuilder builder, string securityScheme, params string[] requiredScopes)
+    {
+        var scheme = new OpenApiSecurityScheme()
+        {
+            Type = SecuritySchemeType.Http,
+            Name = securityScheme,
+            Scheme = securityScheme,
+            Reference = new()
+            {
+                Type = ReferenceType.SecurityScheme,
+                Id = securityScheme
+            }
+        };
+        return builder.WithOpenApi(operation => new(operation)
+        {
+            Security = {
+                new() {
+                    [scheme] = requiredScopes.ToList() ?? []
+                }
+            }
+        });
+    }
+
     /// <summary>
     /// Adds an <see cref="IProducesResponseTypeMetadata"/> with a <see cref="ProblemDetails"/> type
     /// to <see cref="EndpointBuilder.Metadata"/> for all endpoints produced by <paramref name="builder"/>.

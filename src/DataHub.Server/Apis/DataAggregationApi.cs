@@ -1,6 +1,7 @@
 ﻿using DataHub.Core.Models;
 using DataHub.Server.Endpoints;
 using DataHub.Server.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -25,7 +26,12 @@ public static class DataAggregationApi
                            .ProducesProblem(StatusCodes.Status401Unauthorized)
                            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-        group.WithOpenApi();
+        group
+            .RequireAuthorization();
+
+        group
+            .WithOpenApi()
+            .AddOpenApiSecurityRequirement(JwtBearerDefaults.AuthenticationScheme, []);
 
         // GET: /api/data-aggregation/
         group.MapGet("data-aggregation", AggregatedDataEndpoints.GetAggregatedData)

@@ -22,7 +22,7 @@ public static class AggregatedDataEndpoints
     /// A task that represents the asynchronous operation.
     /// The task result contains the aggregated data if found with <see cref="HttpStatusCode.OK"/>, or a not found result with <see cref="HttpStatusCode.NotFound"/>.
     /// </returns>
-    internal static async Task<Results<Ok<AggregatedData>, NotFound>> GetAggregatedData(
+    internal static async Task<Results<Ok<AggregatedData>, UnauthorizedHttpResult, NotFound>> GetAggregatedData(
         [AsParameters] DefaultFilters filters,
         [FromServices] IDataAggregationService service)
     {

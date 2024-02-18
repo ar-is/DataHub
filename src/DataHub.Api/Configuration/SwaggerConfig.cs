@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using DataHub.Core.Models;
 using DataHub.Server.Apis;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -20,10 +21,36 @@ public static class SwaggerConfig
     {
         return builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "DataHub API", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo
+            { 
+                Title = "DataHub API", 
+                Version = "v1", 
+                Description = "Aggregation API that consolidates data from multiple external APIs and provides a unified endpoint to access the aggregated information."
+            });
             options.IncludeXmlComments(Assembly.GetExecutingAssembly());
             options.IncludeXmlComments(typeof(AggregatedData).Assembly);
             options.IncludeXmlComments(typeof(DataAggregationApi).Assembly);
+
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization header using the Bearer scheme",
+                Type = SecuritySchemeType.Http,
+                Scheme = JwtBearerDefaults.AuthenticationScheme
+            });
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = JwtBearerDefaults.AuthenticationScheme
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
         });
     }
 
@@ -34,7 +61,7 @@ public static class SwaggerConfig
     /// <returns>The same <see cref="IApplicationBuilder"/> for method chaining.</returns>
     public static IApplicationBuilder UseSwaggerExtended(this WebApplication app)
     {
-        app.UseSwagger();
+        app.MapSwagger();
         app.UseSwaggerUI(c =>
         {
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "DataHub API");
