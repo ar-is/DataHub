@@ -64,7 +64,7 @@ public static class DiConfig
     /// <param name="configuration">The <see cref="IConfiguration"/> from which to retrieve configuration settings.</param>
     /// <returns>The <see cref="IServiceCollection"/> instance with the configured services added.</returns>
     private static IServiceCollection AddNewsApis(this IServiceCollection services, IConfiguration configuration)
-        => services.AddTransient<IDataProviderService<Weather>, DataProviderService<Weather>>()
+        => services.AddTransient<IDataProviderService<News>, DataProviderService<News>>()
                    .AddSpaceflightNewsApi(configuration);
 
     /// <summary>
@@ -94,7 +94,7 @@ public static class DiConfig
     /// <param name="configuration">The <see cref="IConfiguration"/> from which to retrieve configuration settings.</param>
     /// <returns>The <see cref="IServiceCollection"/> instance with the configured services added.</returns>
     private static IServiceCollection AddBooksApis(this IServiceCollection services, IConfiguration configuration)
-        => services.AddTransient<IDataProviderService<Weather>, DataProviderService<Weather>>()
+        => services.AddTransient<IDataProviderService<Book>, DataProviderService<Book>>()
                    .AddOpenLibraryApi(configuration);
 
     /// <summary>
