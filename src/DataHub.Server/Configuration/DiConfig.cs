@@ -23,7 +23,8 @@ public static class DiConfig
     public static IServiceCollection AddExternalApis(this IServiceCollection services, IConfiguration configuration)
         => services.Configure<ExternalApiOptions>(configuration.GetSection(ExternalApiOptions.GeneralOptionsName))
             .AddTransient<IDataAggregationService, DataAggregationService>()
-            .AddWeatherApis(configuration);
+            .AddWeatherApis(configuration)
+            .AddNewsApis(configuration);
 
     /// <summary>
     /// Adds configuration for weather-related APIs and related services to the specified <see cref="IServiceCollection"/>.
@@ -51,7 +52,38 @@ public static class DiConfig
             {
                 httpClient.BaseAddress = new Uri(configuration.GetSection(OpenMeteoOptions.Name).GetValue<string>(nameof(OpenMeteoOptions.BaseAddress)));
             })
-            .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetime))));
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds configuration for news-related APIs and related services to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="configuration">The <see cref="IConfiguration"/> from which to retrieve configuration settings.</param>
+    /// <returns>The <see cref="IServiceCollection"/> instance with the configured services added.</returns>
+    private static IServiceCollection AddNewsApis(this IServiceCollection services, IConfiguration configuration)
+        => services.Configure<ExternalApiOptions>(configuration.GetSection(ExternalApiOptions.GeneralOptionsName))
+            .AddTransient<IDataProviderService<Weather>, DataProviderService<Weather>>()
+            .AddSpaceflightNewsApi(configuration);
+
+    /// <summary>
+    /// Adds configuration for the SpaceflightNews API and related services to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="configuration">The <see cref="IConfiguration"/> from which to retrieve configuration settings.</param>
+    /// <returns>The <see cref="IServiceCollection"/> instance with the configured services added.</returns>
+    private static IServiceCollection AddSpaceflightNewsApi(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<SpaceflightNewsOptions>(configuration.GetSection(SpaceflightNewsOptions.Name));
+        services.AddTransient<IApiClient<News>, SpaceflightNewsApiClient>();
+        services.AddHttpClient<SpaceflightNewsApiClient>()
+            .ConfigureHttpClient(httpClient =>
+            {
+                httpClient.BaseAddress = new Uri(configuration.GetSection(SpaceflightNewsOptions.Name).GetValue<string>(nameof(SpaceflightNewsOptions.BaseAddress)));
+            })
+            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetime))));
 
         return services;
     }

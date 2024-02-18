@@ -76,7 +76,7 @@ public partial class OpenMeteoApiResponse
     public Daily Daily { get; set; }
 
     /// <summary>
-    /// Converts the <see cref="OpenMeteoApiResponse"/> to weather data for the Open-Meteo API client.
+    /// Converts the <see cref="OpenMeteoApiResponse"/> to Weather data for the Open-Meteo API client.
     /// </summary>
     /// <param name="apiClient">The name of the API client.</param>
     /// <returns>An <see cref="ApiClientData{Weather}"/>instance containing weather data.</returns>
