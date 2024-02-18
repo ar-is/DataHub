@@ -47,12 +47,12 @@ public partial class OpenLibraryApiResponse
     public ApiClientData<Book> ToBooksData(string apiProvider)
         => new(apiProvider, isSuccessful: true)
         {
-            Data = Works.Select(x => new Book
+            Data = Works?.Count > 0? Works.Select(x => new Book
             {
                 Title = x.Title,
                 Authors = x.Authors.Select(a => a.Name).ToList(),
                 DatePublished = new DateTimeOffset(new DateTime((int)x.FirstPublishYear, 1, 1), TimeSpan.Zero)
-            })
+            }) : []
         };
 }
 

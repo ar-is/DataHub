@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{AEE00229-A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataHub.Server.Tests", "test\DataHub.Server.Tests\DataHub.Server.Tests.csproj", "{A9E02E0A-C979-4F8C-9BA2-763039E87F8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataHub.Core.Tests", "test\DataHub.Core.Tests\DataHub.Core.Tests.csproj", "{7490DB35-EDB3-4BCC-A696-FA9CB1342301}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 		{A9E02E0A-C979-4F8C-9BA2-763039E87F8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9E02E0A-C979-4F8C-9BA2-763039E87F8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E02E0A-C979-4F8C-9BA2-763039E87F8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7490DB35-EDB3-4BCC-A696-FA9CB1342301}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7490DB35-EDB3-4BCC-A696-FA9CB1342301}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7490DB35-EDB3-4BCC-A696-FA9CB1342301}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7490DB35-EDB3-4BCC-A696-FA9CB1342301}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +57,7 @@ Global
 		{27CCC0BA-1E9B-4C2D-B84C-445436F17A02} = {2AD40059-E20F-46AB-A739-756C8FF8DE32}
 		{D55686A1-90C0-45BA-82F4-5B59D540FE54} = {2AD40059-E20F-46AB-A739-756C8FF8DE32}
 		{A9E02E0A-C979-4F8C-9BA2-763039E87F8C} = {AEE00229-A86A-4ED5-A349-A712A5C59E2E}
+		{7490DB35-EDB3-4BCC-A696-FA9CB1342301} = {AEE00229-A86A-4ED5-A349-A712A5C59E2E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8D33D1F0-8E85-45DB-91B3-23BB26D7F8F2}
