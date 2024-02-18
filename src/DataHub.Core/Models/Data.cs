@@ -9,5 +9,5 @@ public class Data<T> where T : class
     /// <summary>
     /// Collection of API client data providers.
     /// </summary>
-    public List<ApiClientData<T>> ApiClients { get; set; } = [];
+    public List<ApiClientData<T>> ApiProviders { get; set; } = [];
 }

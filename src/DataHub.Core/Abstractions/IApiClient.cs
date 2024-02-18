@@ -1,7 +1,7 @@
 ﻿using DataHub.Core.Filters;
 using DataHub.Core.Models;
 
-namespace AggregationDataApp.Core.Abstractions;
+namespace DataHub.Core.Abstractions;
 
 /// <summary>
 /// Generic API client interface for fetching data of type <typeparamref name="T"/>.

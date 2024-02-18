@@ -1,7 +1,7 @@
 ﻿using DataHub.Core.Filters;
 using DataHub.Core.Models;
 
-namespace AggregationDataApp.Core.Abstractions;
+namespace DataHub.Core.Abstractions;
 
 /// <summary>
 /// Generic data provider service interface for aggregating data of type <typeparamref name="T"/> from multiple <see cref="IApiClient{T}"/> sources.

@@ -1,7 +1,7 @@
 ﻿using DataHub.Core.Filters;
 using DataHub.Core.Models;
 
-namespace AggregationDataApp.Core.Abstractions;
+namespace DataHub.Core.Abstractions;
 
 /// <summary>
 /// Service interface for aggregating data from multiple sources.
