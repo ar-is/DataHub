@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents options for configuring external API clients.
 /// </summary>
-public abstract class ExternalApiOptions
+public class ExternalApiOptions
 {
     /// <summary>
     /// The name of the external API options section.
@@ -28,10 +28,10 @@ public abstract class ExternalApiOptions
     /// <summary>
     /// The lifetime of the HTTP message handler used by the API client.
     /// </summary>
-    public string HandlerLifetime { get; set; }
+    public int HandlerLifetimeInMin { get; set; }
 
     /// <summary>
-    /// The number of retry attempts for failed requests.
+    /// The lifetime of cached API client response.
     /// </summary>
-    public string RetryCount { get; set; }
+    public int CacheExpirationInMin { get; set; }
 }

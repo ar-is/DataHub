@@ -64,7 +64,7 @@ public static class DiConfig
             {
                 httpClient.BaseAddress = new Uri(configuration.GetSection(OpenMeteoOptions.Name).GetValue<string>(nameof(OpenMeteoOptions.BaseAddress)));
             })
-            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetime))));
+            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetimeInMin))));
 
         return services;
     }
@@ -95,7 +95,7 @@ public static class DiConfig
             {
                 httpClient.BaseAddress = new Uri(configuration.GetSection(SpaceflightNewsOptions.Name).GetValue<string>(nameof(SpaceflightNewsOptions.BaseAddress)));
             })
-            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetime))));
+            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetimeInMin))));
 
         return services;
     }
@@ -126,7 +126,7 @@ public static class DiConfig
             {
                 httpClient.BaseAddress = new Uri(configuration.GetSection(OpenLibraryOptions.Name).GetValue<string>(nameof(OpenLibraryOptions.BaseAddress)));
             })
-            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetime))));
+            .SetHandlerLifetime(TimeSpan.FromMinutes(configuration.GetSection(ExternalApiOptions.GeneralOptionsName).GetValue<int>(nameof(ExternalApiOptions.HandlerLifetimeInMin))));
 
         return services;
     }

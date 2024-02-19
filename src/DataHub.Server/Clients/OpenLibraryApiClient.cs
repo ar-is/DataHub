@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using DataHub.Core.Abstractions;
+using DataHub.Core.Configuration.Options;
 using DataHub.Core.Filters;
 using DataHub.Core.Models;
 using DataHub.Server.Configuration.Options;
@@ -15,10 +15,9 @@ namespace DataHub.Server.Clients;
 /// <summary>
 /// Provides methods for accessing books data from the Open Library API.
 /// </summary>
-public class OpenLibraryApiClient : IApiClient<Book>
+public class OpenLibraryApiClient : BaseApiClient<Book>
 {
     private readonly HttpClient _httpClient;
-    private readonly IDistributedCache _distributedCache;
     private readonly ILogger<OpenLibraryApiClient> _logger;
     private readonly string _clientName;
 
@@ -34,10 +33,10 @@ public class OpenLibraryApiClient : IApiClient<Book>
         IHttpClientFactory httpClientFactory, 
         IDistributedCache distributedCache, 
         IOptions<OpenLibraryOptions> options, 
-        ILogger<OpenLibraryApiClient> logger)
+        IOptions<ExternalApiOptions> externalApiOptions,
+        ILogger<OpenLibraryApiClient> logger) : base(distributedCache, externalApiOptions)
     {
         _httpClient = httpClientFactory?.CreateClient(nameof(OpenLibraryApiClient)) ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
         _clientName = options?.Value?.ClientName ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -47,26 +46,27 @@ public class OpenLibraryApiClient : IApiClient<Book>
     /// </summary>
     /// <param name="dateRange">The date range filter specifying the start and end dates for the data retrieval.</param>
     /// <returns>An <see cref="ApiClientData{T}"/> object containing the books data retrieved from the API.</returns>
-    public async Task<ApiClientData<Book>> GetData(DateRangeFilter dateRange)
+    public override async Task<ApiClientData<Book>> GetData(DateRangeFilter dateRange)
     {
-        var response = await _distributedCache.TryGetAndSetAsync(
+        var response = await GetApiResponse(
             cacheKey: $"{nameof(OpenLibraryApiClient)}.{nameof(DateRangeFilter)}={dateRange.DateFrom}.{dateRange.DateTo}",
-            getSourceAsync: async () =>
-                await _httpClient.GetAsync(_httpClient.BaseAddress + $"&published_in={dateRange.DateFrom?.Year.ToString()}-{dateRange.DateTo?.Year.ToString()}"),
-            jsonSerializerOptions: JsonSerializerOptionDefaults.GetDefaultSettings(),
-            options: new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-            });
+            httpTask: async () =>
+                await _httpClient.GetAsync(_httpClient.BaseAddress + $"&published_in={dateRange.DateFrom?.Year.ToString()}-{dateRange.DateTo?.Year.ToString()}"));
 
         if (!response.IsSuccessStatusCode)
         {
-            var booksData = new ApiClientData<Book>(_clientName, isSuccessful: false);
-            _logger.LogWarning("{ErrorMessage}. {Exception}", booksData.ErrorMessage, response.ProcessErrorResponse());
-            return booksData;
+            _logger.LogWarning("Error while trying to fetch data from {ApiProvider}. {ErrorMessage}", _clientName, await response.ProcessErrorResponse());
+            return ApiClientData<Book>.Fail(_clientName);
         }
 
-        var meteoResponse = JsonSerializer.Deserialize<OpenLibraryApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());
-        return meteoResponse.ToBooksData(_clientName);
+        try
+        {
+            var meteoResponse = JsonSerializer.Deserialize<OpenLibraryApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());
+            return meteoResponse.ToData(_clientName);
+        } catch (Exception ex)
+        {
+            _logger.LogWarning("Error while trying to deserialize and map data from {ApiProvider}. {ErrorMessage}", _clientName, ex.InnerException?.Message ?? ex.Message);
+            return ApiClientData<Book>.Fail(_clientName);
+        }
     }
 }

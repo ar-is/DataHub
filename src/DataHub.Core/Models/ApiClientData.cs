@@ -30,10 +30,22 @@ public class ApiClientData<T> where T : class
     /// Initializes a new instance of the <see cref="ApiClientData{T}"/> class with the specified API provider.
     /// </summary>
     /// <param name="apiProvider">The name of the API client provider.</param>
-    public ApiClientData(string apiProvider, bool isSuccessful)
+    private ApiClientData(string apiProvider)
     {
         ApiProvider = apiProvider;
-        IsSuccessful = isSuccessful;
-        ErrorMessage = isSuccessful ? null : $"Could not fetch data successfully from {ApiProvider}";
     }
+
+    public static ApiClientData<T> Success(string apiProvider, IEnumerable<T> data)
+        => new(apiProvider)
+        {
+            IsSuccessful = true,
+            Data = data
+        };
+
+    public static ApiClientData<T> Fail(string apiProvider)
+        => new(apiProvider)
+        {
+            IsSuccessful = false,
+            ErrorMessage = $"Could not fetch data successfully from {apiProvider}."
+        };
 }

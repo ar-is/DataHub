@@ -16,6 +16,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
         builder.AddSwaggerGenConfig();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddCustomServices(builder.Configuration);

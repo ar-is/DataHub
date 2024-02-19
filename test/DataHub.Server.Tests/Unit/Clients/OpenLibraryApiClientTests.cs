@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using DataHub.Core.Configuration.Options;
 using DataHub.Core.Filters;
 using DataHub.Core.Models;
 using DataHub.Server.Clients;
@@ -22,7 +23,8 @@ internal class OpenLibraryApiClientTests
     private IDistributedCache _distributedCache;
     private IHttpClientFactory _httpClientFactory;
     private ILogger<OpenLibraryApiClient> _logger;
-    private IOptions<OpenLibraryOptions> _options;
+    private IOptions<ExternalApiOptions> _externalApiOptions;
+    private IOptions<OpenLibraryOptions> _openLibraryOptions;
     private DateRangeFilter _dateRange;
 
     [SetUp]
@@ -30,7 +32,8 @@ internal class OpenLibraryApiClientTests
     {
         _distributedCache = Substitute.For<IDistributedCache>();
         _logger = Substitute.For<ILogger<OpenLibraryApiClient>>();
-        _options = Options.Create(new OpenLibraryOptions { ClientName = ClientName });
+        _externalApiOptions = Options.Create(new ExternalApiOptions { CacheExpirationInMin = 10 });
+        _openLibraryOptions = Options.Create(new OpenLibraryOptions { ClientName = ClientName });
         _dateRange = new DateRangeFilter("2024-02-18", "2024-02-20");
     }
 
@@ -39,8 +42,8 @@ internal class OpenLibraryApiClientTests
     {
         // Arrange
         SetHttpClient(HttpStatusCode.OK);
-        _sut = new OpenLibraryApiClient(_httpClientFactory, _distributedCache, _options, _logger);
-        var expectedResult = new ApiClientData<Book>(ClientName, true);
+        _sut = new OpenLibraryApiClient(_httpClientFactory, _distributedCache, _openLibraryOptions, _externalApiOptions, _logger);
+        var expectedResult = ApiClientData<Book>.Success(ClientName, []);
 
         // Act
         var result = await _sut.GetData(_dateRange);
@@ -60,8 +63,8 @@ internal class OpenLibraryApiClientTests
     {
         // Arrange
         SetHttpClient(HttpStatusCode.ServiceUnavailable);
-        _sut = new OpenLibraryApiClient(_httpClientFactory, _distributedCache, _options, _logger);
-        var expectedResult = new ApiClientData<Book>(ClientName, false);
+        _sut = new OpenLibraryApiClient(_httpClientFactory, _distributedCache, _openLibraryOptions, _externalApiOptions, _logger);
+        var expectedResult = ApiClientData<Book>.Fail(ClientName);
 
         // Act
         var result = await _sut.GetData(_dateRange);

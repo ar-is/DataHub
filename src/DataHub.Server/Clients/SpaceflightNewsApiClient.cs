@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using DataHub.Core.Abstractions;
+using DataHub.Core.Configuration.Options;
 using DataHub.Core.Filters;
 using DataHub.Core.Models;
 using DataHub.Server.Configuration.Options;
@@ -15,10 +15,9 @@ namespace DataHub.Server.Clients;
 /// <summary>
 /// Provides methods for accessing news data from the SpaceflightNews API.
 /// </summary>
-public class SpaceflightNewsApiClient : IApiClient<News>
+public class SpaceflightNewsApiClient : BaseApiClient<News>
 {
     private readonly HttpClient _httpClient;
-    private readonly IDistributedCache _distributedCache;
     private readonly ILogger<SpaceflightNewsApiClient> _logger;
     private readonly string _clientName;
 
@@ -34,10 +33,10 @@ public class SpaceflightNewsApiClient : IApiClient<News>
         IHttpClientFactory httpClientFactory, 
         IDistributedCache distributedCache, 
         IOptions<SpaceflightNewsOptions> options, 
-        ILogger<SpaceflightNewsApiClient> logger)
+        IOptions<ExternalApiOptions> externalApiOptions,
+        ILogger<SpaceflightNewsApiClient> logger) : base(distributedCache, externalApiOptions)
     {
         _httpClient = httpClientFactory?.CreateClient(nameof(SpaceflightNewsApiClient)) ?? throw new ArgumentNullException(nameof(httpClientFactory));
-        _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
         _clientName = options?.Value?.ClientName ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -47,26 +46,27 @@ public class SpaceflightNewsApiClient : IApiClient<News>
     /// </summary>
     /// <param name="dateRange">The date range filter specifying the start and end dates for the data retrieval.</param>
     /// <returns>An <see cref="ApiClientData{T}"/> object containing the news data retrieved from the API.</returns>
-    public async Task<ApiClientData<News>> GetData(DateRangeFilter dateRange)
+    public override async Task<ApiClientData<News>> GetData(DateRangeFilter dateRange)
     {
-        var response = await _distributedCache.TryGetAndSetAsync(
+        var response = await GetApiResponse(
             cacheKey: $"{nameof(SpaceflightNewsApiClient)}.{nameof(DateRangeFilter)}={dateRange.DateFrom}.{dateRange.DateTo}",
-            getSourceAsync: async () =>
-                await _httpClient.GetAsync(_httpClient.BaseAddress + $"?published_at_gte={dateRange?.DateFrom?.ToString("yyyy-MM-dd")}&published_at_lte={dateRange?.DateTo?.ToString("yyyy-MM-dd")}"),
-            jsonSerializerOptions: JsonSerializerOptionDefaults.GetDefaultSettings(),
-            options: new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-            });
+            httpTask: async () =>
+                 await _httpClient.GetAsync(_httpClient.BaseAddress + $"?published_at_gte={dateRange?.DateFrom?.ToString("yyyy-MM-dd")}&published_at_lte={dateRange?.DateTo?.ToString("yyyy-MM-dd")}"));
 
         if (!response.IsSuccessStatusCode)
         {
-            var newsData = new ApiClientData<News>(_clientName, isSuccessful: false);
-            _logger.LogWarning("{ErrorMessage}. {Exception}", newsData.ErrorMessage, response.ProcessErrorResponse());
-            return newsData;
+            _logger.LogWarning("Error while trying to fetch data from {ApiProvider}. {ErrorMessage}", _clientName, await response.ProcessErrorResponse());
+            return ApiClientData<News>.Fail(_clientName);
         }
 
-        var meteoResponse = JsonSerializer.Deserialize<SpaceflightNewsApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());
-        return meteoResponse.ToNewsData(_clientName);
+        try
+        {
+            var meteoResponse = JsonSerializer.Deserialize<SpaceflightNewsApiResponse>(await response.Content.ReadAsStringAsync(), JsonSerializerOptionDefaults.GetDefaultSettings());
+            return meteoResponse.ToData(_clientName);
+        } catch (Exception ex)
+        {
+            _logger.LogWarning("Error while trying to deserialize and map data from {ApiProvider}. {ErrorMessage}", _clientName, ex.InnerException?.Message ?? ex.Message);
+            return ApiClientData<News>.Fail(_clientName);
+        }
     }
 }
